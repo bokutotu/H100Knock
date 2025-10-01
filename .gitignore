@@ -1,0 +1,31 @@
+# Cabal build output
+dist/
+dist-newstyle/
+
+# Cabal local project settings
+cabal.project.local
+cabal.project.local~
+
+# Stack / other tooling
+.stack-work/
+.hsenv/
+
+# GHC build artefacts
+*.hi
+*.o
+*.dyn_o
+*.dyn_hi
+
+# IDE / editor generated files
+.direnv/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Tags and assorted caches
+tags
+TAGS
+*.prof
+*.hp
+*.eventlog

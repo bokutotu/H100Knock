@@ -1,0 +1,47 @@
+cabal-version: 3.14
+name:          HaskellPractice
+version:       0.1.0.0
+synopsis:      Haskell practice executable
+description:   Minimal executable for Haskell practice.
+build-type:    Simple
+
+library
+    exposed-modules:
+        HaskellPractice.Lib
+        HaskellPractice.Problems.Basic
+
+    hs-source-dirs:   src
+    default-language: GHC2024
+    build-depends:
+        base >=4.14 && <5,
+        containers,
+        conduit,
+        mtl,
+        resourcet,
+        transformers,
+        unliftio
+
+executable HaskellPractice
+    main-is:          Main.hs
+    hs-source-dirs:   app
+    default-language: GHC2024
+    build-depends:
+        HaskellPractice,
+        base >=4.14 && <5
+
+test-suite HaskellPractice-test
+    type:               exitcode-stdio-1.0
+    main-is:            Spec.hs
+    build-tool-depends: hspec-discover:hspec-discover
+    hs-source-dirs:     test
+    default-language:   GHC2024
+    build-depends:
+        HaskellPractice,
+        base >=4.14 && <5,
+        containers,
+        conduit,
+        mtl,
+        resourcet,
+        transformers,
+        unliftio,
+        hspec >=2.7 && <3
