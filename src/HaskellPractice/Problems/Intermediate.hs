@@ -26,33 +26,48 @@ module HaskellPractice.Problems.Intermediate (
 
     -- * Concurrency section
     mapConcurrentlyLimited,
-    raceBoth
+    raceBoth,
 ) where
 
-import Control.Applicative (Alternative (..))
-import Control.Monad.Trans.Except (ExceptT)
-import Control.Monad.Trans.Reader (ReaderT)
-import Control.Monad.Trans.State.Strict (StateT)
-import System.IO (Handle)
+import           Control.Applicative              (Alternative (..))
+import           Control.Monad.Trans.Except       (ExceptT)
+import           Control.Monad.Trans.Reader       (ReaderT)
+import           Control.Monad.Trans.State.Strict (StateT)
+import           System.IO                        (Handle, IOMode (ReadMode),
+                                                   hGetContents, hGetContents',
+                                                   openFile, withFile)
 
--- 問題1: ハンドルから空行が現れるまでの行を読み取り、行のリストとして返す関数 readUntilBlank を実装せよ。
+-- 問題1: ハンドルから行を読み込み、空行（空文字列）が現れた時点で読み取りを停止し、それまでに読んだ行だけを順番に返す関数 readUntilBlank を実装せよ。
+-- 空行そのものと、その後に続く行は結果に含めないこと。空行が最初に現れた場合は空リストを返すこと。
 readUntilBlank :: Handle -> IO [String]
-readUntilBlank = error "TODO"
+readUntilBlank h = takeWhile (/= "") . lines <$> hGetContents h
 
 -- 問題2: ハンドルから全行を読み込み、述語を満たす行数を数える関数 countLinesMatching を実装せよ。
 countLinesMatching :: Handle -> (String -> Bool) -> IO Int
-countLinesMatching = error "TODO"
+countLinesMatching h f = length . filter f . lines <$> hGetContents h
 
 -- 問題3: ファイルパスと取得したい末尾行数 n を受け取り、ファイル末尾から n 行を返す関数 tailFile を実装せよ。
 tailFile :: FilePath -> Int -> IO [String]
-tailFile = error "TODO"
+tailFile _ n | n <= 0 = pure []
+tailFile path n = withFile path ReadMode (fmap (lastN . lines) . hGetContents')
+  where
+    -- hGetContentsは遅延評価なので、Specファイルの実際に値を見る部分まで、計算が行われない。
+    -- 一方で、withFileはwithFileのブロックの部分でしか、ファイルを開いていない。(ブロックを抜けた場合ファイルを閉じる)
+    -- そのため、実際にspecで値を評価する頃にはwithFileは閉じているため、エラーが出て落ちる。
+    lastN l = drop (max (length l - n) 0) l
+
+tailFile' :: FilePath -> Int -> IO [String]
+tailFile' path numLines = do
+    -- このコードは、ファイルハンドルを閉じていないので、いつファイルハンドルが閉じるかはGCが決めるのであんまりいいコードではない
+    h <- openFile path ReadMode
+    reverse . take numLines . reverse . lines <$> hGetContents h
 
 -- 問題4: 入力ファイルから条件を満たす行だけを抽出し、出力ファイルへ書き出す関数 copyFileFiltered を実装せよ。
 copyFileFiltered :: FilePath -> FilePath -> (String -> Bool) -> IO ()
 copyFileFiltered = error "TODO"
 
 -- 問題5: 単純な文字列パーサ Parser を用意した。Functor / Applicative / Monad / Alternative の各インスタンスを定義せよ。
-newtype Parser a = Parser { runParser :: String -> Either String (a, String) }
+newtype Parser a = Parser {runParser :: String -> Either String (a, String)}
 
 instance Functor Parser where
     fmap _ _ = error "TODO"
@@ -95,13 +110,13 @@ data Config = Config
     }
     deriving (Eq, Show)
 
-newtype AppError = AppError { unAppError :: String }
+newtype AppError = AppError {unAppError :: String}
     deriving (Eq, Show)
 
 data AppEnv = AppEnv
-    { envConfig :: Config
+    { envConfig      :: Config
     , envServiceName :: String
-    , envLog :: String -> IO ()
+    , envLog         :: String -> IO ()
     }
 
 data AppState = AppState

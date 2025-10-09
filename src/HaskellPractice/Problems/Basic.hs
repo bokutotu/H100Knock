@@ -1,5 +1,4 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE OverloadedRecordDot   #-}
 {-# LANGUAGE RecordWildCards       #-}
 
 module HaskellPractice.Problems.Basic (
@@ -308,4 +307,4 @@ collectMonoid = foldl (\map (key, value) -> M.alter (update value) key map) M.em
   where
     update value = \case
         Just old -> Just $ old <> value
-        Nothing  -> Just value
+        Nothing -> Just value
