@@ -9,10 +9,12 @@ library
     exposed-modules:
         HaskellPractice.Lib
         HaskellPractice.Problems.Basic
+        HaskellPractice.Problems.Intermediate
 
     hs-source-dirs:   src
     default-language: GHC2024
     build-depends:
+        async,
         base >=4.14 && <5,
         containers,
         conduit,
@@ -32,16 +34,21 @@ executable HaskellPractice
 test-suite HaskellPractice-test
     type:               exitcode-stdio-1.0
     main-is:            Spec.hs
+    other-modules:      HaskellPractice.LibSpec
+                        HaskellPractice.ProblemsSpec
+                        HaskellPractice.Problems.IntermediateSpec
     build-tool-depends: hspec-discover:hspec-discover
     hs-source-dirs:     test
     default-language:   GHC2024
     build-depends:
         HaskellPractice,
+        async,
         base >=4.14 && <5,
         containers,
         conduit,
         mtl,
         resourcet,
+        temporary,
         transformers,
         unliftio,
         hspec >=2.7 && <3

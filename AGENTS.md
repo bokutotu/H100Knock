@@ -30,3 +30,6 @@
 
 5. **ログ/ドキュメント更新**
    - 新しい課題を追加したら、このファイルまたは専用ドキュメントに方針・意図を追記する。
+- 2025-10-05 Basic: takeEvery / runningTotals / diffAdjacent / firstDuplicate / classifyTrend を追加し、リスト操作・fold・Set 利用・パターンガードの基礎練習を補完した。
+- 2025-10-05 Basic: classifyTriangle / collectMonoid を追加し、パターンガードと複合型クラス制約 (Ord + Monoid) の演習を補強した。
+- 2025-10-08 Intermediate: readUntilBlank など IO 演習、Parser 系課題 (satisfy / charP / stringLiteral / intLiteral / commaSeparated)、AppM スタック (loadConfig / runAppM / incrementCounter / requireSetting) と並列処理 (mapConcurrentlyLimited / raceBoth) を追加し、ステップ3の問題セットを整備した。
