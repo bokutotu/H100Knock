@@ -33,9 +33,12 @@ import           Control.Applicative              (Alternative (..))
 import           Control.Monad.Trans.Except       (ExceptT)
 import           Control.Monad.Trans.Reader       (ReaderT)
 import           Control.Monad.Trans.State.Strict (StateT)
-import           System.IO                        (Handle, IOMode (ReadMode),
+import           Data.Foldable                    (traverse_)
+import           System.IO                        (Handle,
+                                                   IOMode (ReadMode, WriteMode),
                                                    hGetContents, hGetContents',
-                                                   openFile, withFile)
+                                                   hPutStrLn, openFile,
+                                                   withFile)
 
 -- 問題1: ハンドルから行を読み込み、空行（空文字列）が現れた時点で読み取りを停止し、それまでに読んだ行だけを順番に返す関数 readUntilBlank を実装せよ。
 -- 空行そのものと、その後に続く行は結果に含めないこと。空行が最初に現れた場合は空リストを返すこと。
@@ -64,7 +67,10 @@ tailFile' path numLines = do
 
 -- 問題4: 入力ファイルから条件を満たす行だけを抽出し、出力ファイルへ書き出す関数 copyFileFiltered を実装せよ。
 copyFileFiltered :: FilePath -> FilePath -> (String -> Bool) -> IO ()
-copyFileFiltered = error "TODO"
+copyFileFiltered input output f = withFile input ReadMode (withFile output WriteMode . filterLine)
+  where
+    filterLine inputHandle outputHandle =
+        traverse_ (hPutStrLn outputHandle) . filter f . lines =<< hGetContents inputHandle
 
 -- 問題5: 単純な文字列パーサ Parser を用意した。Functor / Applicative / Monad / Alternative の各インスタンスを定義せよ。
 newtype Parser a = Parser {runParser :: String -> Either String (a, String)}
