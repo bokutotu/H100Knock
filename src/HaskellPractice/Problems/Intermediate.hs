@@ -70,7 +70,12 @@ copyFileFiltered :: FilePath -> FilePath -> (String -> Bool) -> IO ()
 copyFileFiltered input output f = withFile input ReadMode (withFile output WriteMode . filterLine)
   where
     filterLine inputHandle outputHandle =
-        traverse_ (hPutStrLn outputHandle) . filter f . lines =<< hGetContents inputHandle
+        hGetContents inputHandle
+            >>= traverse_ (hPutStrLn outputHandle)
+                . filter f
+                . lines
+
+-- traverse_ (hPutStrLn outputHandle) . filter f . lines =<< hGetContents inputHandle
 
 -- 問題5: 単純な文字列パーサ Parser を用意した。Functor / Applicative / Monad / Alternative の各インスタンスを定義せよ。
 newtype Parser a = Parser {runParser :: String -> Either String (a, String)}
