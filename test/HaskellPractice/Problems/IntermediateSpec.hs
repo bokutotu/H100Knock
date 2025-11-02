@@ -2,10 +2,11 @@
 
 module HaskellPractice.Problems.IntermediateSpec (spec) where
 
-import           Control.Applicative             ((<|>))
-import           Control.Monad.Trans.Except      (runExceptT)
-import           System.IO                        (IOMode (ReadMode), hClose, withFile)
-import           System.IO.Temp                   (withSystemTempFile)
+import           Control.Applicative                   ((<|>))
+import           Control.Monad.Trans.Except            (runExceptT)
+import           System.IO                             (IOMode (ReadMode),
+                                                        hClose, withFile)
+import           System.IO.Temp                        (withSystemTempFile)
 import           Test.Hspec
 
 import           HaskellPractice.Problems.Intermediate

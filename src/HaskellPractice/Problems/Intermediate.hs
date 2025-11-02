@@ -81,14 +81,26 @@ copyFileFiltered input output f = withFile input ReadMode (withFile output Write
 newtype Parser a = Parser {runParser :: String -> Either String (a, String)}
 
 instance Functor Parser where
-    fmap _ _ = error "TODO"
+    fmap f (Parser p) = Parser $ \input -> case p input of
+        Left err       -> Left err
+        Right (a, str) -> Right (f a, str)
 
 instance Applicative Parser where
-    pure _ = error "TODO"
-    (<*>) = error "TODO"
+    pure a = Parser (\input -> Right (a, input))
+    Parser pf <*> Parser pa = Parser $ \input -> do
+        (f, s1) <- pf input
+        (a, s2) <- pa s1
+        pure (f a, s2)
+
+-- Parser pf <*> Parser pa = Parser $ \input ->
+--     case pf input of
+--         Left e -> Left e
+--         Right (fab, s1) -> case pa s1 of
+--             Left e        -> Left e
+--             Right (a, s2) -> Right (fab a, s2)
 
 instance Monad Parser where
-    (>>=) = error "TODO"
+    Parser pf >>= f = error "TODO"
 
 instance Alternative Parser where
     empty = error "TODO"

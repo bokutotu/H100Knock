@@ -1,8 +1,8 @@
 module HaskellPractice.LibSpec (spec) where
 
-import Test.Hspec
+import           Test.Hspec
 
-import HaskellPractice.Lib (greet)
+import           HaskellPractice.Lib (greet)
 
 spec :: Spec
 spec =

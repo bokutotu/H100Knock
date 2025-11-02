@@ -1,8 +1,8 @@
 module HaskellPractice.ProblemsSpec (spec) where
 
-import           Data.Monoid        (Any (..), Sum (..))
-import qualified Data.List.NonEmpty as NE
-import qualified Data.Map           as M
+import qualified Data.List.NonEmpty             as NE
+import qualified Data.Map                       as M
+import           Data.Monoid                    (Any (..), Sum (..))
 import           Test.Hspec
 
 import           HaskellPractice.Problems.Basic
