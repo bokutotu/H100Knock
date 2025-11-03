@@ -34,6 +34,7 @@ import           Control.Monad.Trans.Except       (ExceptT)
 import           Control.Monad.Trans.Reader       (ReaderT)
 import           Control.Monad.Trans.State.Strict (StateT)
 import           Data.Foldable                    (traverse_)
+import           Data.Functor                     (($>), (<$>))
 import           System.IO                        (Handle,
                                                    IOMode (ReadMode, WriteMode),
                                                    hGetContents, hGetContents',
@@ -100,31 +101,69 @@ instance Applicative Parser where
 --             Right (a, s2) -> Right (fab a, s2)
 
 instance Monad Parser where
-    Parser pf >>= f = error "TODO"
+    Parser pf >>= f = Parser $ \input -> do
+        (a, s1) <- pf input
+        let Parser pa = f a
+        pa s1
 
 instance Alternative Parser where
-    empty = error "TODO"
-    (<|>) = error "TODO"
+    empty = Parser $ \_ -> Left "empty parser"
+    Parser p1 <|> Parser p2 = Parser $ \input ->
+        case p1 input of
+            Left _ -> p2 input
+            result -> result
 
 -- 問題6: 条件を満たす 1 文字を読み取るパーサ satisfy を実装せよ。
 satisfy :: (Char -> Bool) -> Parser Char
-satisfy = error "TODO"
+satisfy f = Parser $ \case
+    (c : cs)
+        | f c -> Right (c, cs)
+    _ -> Left "satisfy: no match"
 
 -- 問題7: 指定した文字を消費するパーサ charP を実装せよ。
 charP :: Char -> Parser Char
-charP = error "TODO"
+charP = satisfy . (==)
 
 -- 問題8: 二重引用符で囲まれた文字列リテラルを読み取るパーサ stringLiteral を実装せよ。
 stringLiteral :: Parser String
-stringLiteral = error "TODO"
+stringLiteral = do
+    _ <- charP '"'
+    content <- many (satisfy (/= '"'))
+    _ <- charP '"'
+    return content
 
 -- 問題9: 符号付き整数を読み取るパーサ intLiteral を実装せよ。
 intLiteral :: Parser Int
-intLiteral = error "TODO"
+intLiteral = Parser $ \case
+    ('+' : cs) -> parseDigits cs
+    ('-' : cs) -> case parseDigits cs of
+        Left err        -> Left err
+        Right (n, rest) -> Right (-n, rest)
+    cs -> parseDigits cs
+  where
+    parseDigits s =
+        let (digits, rest) = span (`elem` ['0' .. '9']) s
+         in if null digits
+                then Left "intLiteral: no digits"
+                else Right (read digits, rest)
 
 -- 問題10: 区切り記号としてカンマと任意の空白を許す、要素の列を読み取るパーサ commaSeparated を実装せよ。
 commaSeparated :: Parser a -> Parser [a]
-commaSeparated = error "TODO"
+commaSeparated (Parser p) = Parser $ \input -> do
+    case p input of
+        Left _ -> Right ([], input)
+        Right (firstElem, rest1) -> case runParser (spaces *> charP ',' *> spaces) rest1 of
+            Left _ -> Right ([firstElem], rest1)
+            Right (_, rest2) -> do
+                (elems, finalRest) <- runParser (commaSeparated (Parser p)) rest2
+                Right (firstElem : elems, finalRest)
+  where
+    spaces = many (satisfy (`elem` [' ', '\t', '\n']))
+
+commaSeparated' :: Parser a -> Parser [a]
+commaSeparated' p = ((:) <$> p <*> many (spaces *> charP ',' *> spaces *> p)) <|> pure []
+  where
+    spaces = many (satisfy (`elem` [' ', '\t', '\n']))
 
 -- 問題11: host=..., port=... 形式の設定ファイルを読み込み、Config を返す ExceptT ベースの関数 loadConfig を実装せよ。
 data Config = Config
