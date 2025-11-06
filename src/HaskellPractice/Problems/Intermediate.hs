@@ -30,11 +30,12 @@ module HaskellPractice.Problems.Intermediate (
 ) where
 
 import           Control.Applicative              (Alternative (..))
-import           Control.Monad.Except             (MonadError (catchError, throwError))
+import           Control.Monad.Except             (MonadError (catchError, throwError),
+                                                   runExceptT)
 import           Control.Monad.Trans              (MonadIO (liftIO))
 import           Control.Monad.Trans.Except       (ExceptT)
-import           Control.Monad.Trans.Reader       (ReaderT)
-import           Control.Monad.Trans.State.Strict (StateT)
+import           Control.Monad.Trans.Reader       (ReaderT (runReaderT))
+import           Control.Monad.Trans.State.Strict (StateT (runStateT))
 import           Data.Foldable                    (traverse_)
 import           Data.Functor                     (($>), (<$>))
 import           Data.List                        (isPrefixOf)
@@ -210,7 +211,7 @@ loadConfig path = do
 
 -- 問題12: AppM を実行し、Either で結果または AppError を返す関数 runAppM を実装せよ。
 runAppM :: AppEnv -> AppState -> AppM a -> IO (Either AppError (a, AppState))
-runAppM = error "TODO"
+runAppM env state m = runExceptT $ runStateT (runReaderT m env) state
 
 -- 問題13: カウンタを任意の値だけ増加させる関数 incrementCounter を AppM 内に実装せよ。
 incrementCounter :: Int -> AppM ()
