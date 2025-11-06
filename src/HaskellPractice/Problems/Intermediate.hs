@@ -30,11 +30,14 @@ module HaskellPractice.Problems.Intermediate (
 ) where
 
 import           Control.Applicative              (Alternative (..))
+import           Control.Monad.Except             (MonadError (catchError, throwError))
+import           Control.Monad.Trans              (MonadIO (liftIO))
 import           Control.Monad.Trans.Except       (ExceptT)
 import           Control.Monad.Trans.Reader       (ReaderT)
 import           Control.Monad.Trans.State.Strict (StateT)
 import           Data.Foldable                    (traverse_)
 import           Data.Functor                     (($>), (<$>))
+import           Data.List                        (isPrefixOf)
 import           System.IO                        (Handle,
                                                    IOMode (ReadMode, WriteMode),
                                                    hGetContents, hGetContents',
@@ -181,7 +184,7 @@ data AppEnv = AppEnv
     , envLog         :: String -> IO ()
     }
 
-data AppState = AppState
+newtype AppState = AppState
     { stateCounter :: Int
     }
     deriving (Eq, Show)
@@ -189,7 +192,21 @@ data AppState = AppState
 type AppM = ReaderT AppEnv (StateT AppState (ExceptT AppError IO))
 
 loadConfig :: FilePath -> ExceptT AppError IO Config
-loadConfig = error "TODO"
+loadConfig path = do
+    content <- catchError (liftIO $ readFile path) (\e -> throwError $ AppError ("Failed to read config file: " ++ show e))
+    let l = lines content
+    hostLine <- case filter (isPrefixOf "host=") l of
+        (l : _) -> return l
+        []      -> throwError $ AppError "Missing host configuration"
+    portLine <- case filter (isPrefixOf "port=") l of
+        (l : _) -> return l
+        []      -> throwError $ AppError "Missing port configuration"
+    let host = drop (length "host=") hostLine
+    let portStr = drop (length "port=") portLine
+    port <- case reads portStr of
+        [(n, "")] -> return n
+        _         -> throwError $ AppError "Invalid port number"
+    return $ Config host port
 
 -- 問題12: AppM を実行し、Either で結果または AppError を返す関数 runAppM を実装せよ。
 runAppM :: AppEnv -> AppState -> AppM a -> IO (Either AppError (a, AppState))

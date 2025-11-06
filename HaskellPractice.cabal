@@ -16,8 +16,8 @@ library
     build-depends:
         async,
         base >=4.14 && <5,
-        containers,
         conduit,
+        containers,
         mtl,
         resourcet,
         transformers,
@@ -34,21 +34,23 @@ executable HaskellPractice
 test-suite HaskellPractice-test
     type:               exitcode-stdio-1.0
     main-is:            Spec.hs
-    other-modules:      HaskellPractice.LibSpec
-                        HaskellPractice.ProblemsSpec
-                        HaskellPractice.Problems.IntermediateSpec
     build-tool-depends: hspec-discover:hspec-discover
     hs-source-dirs:     test
+    other-modules:
+        HaskellPractice.LibSpec
+        HaskellPractice.Problems.IntermediateSpec
+        HaskellPractice.ProblemsSpec
+
     default-language:   GHC2024
     build-depends:
         HaskellPractice,
         async,
         base >=4.14 && <5,
-        containers,
         conduit,
+        containers,
+        hspec >=2.7 && <3,
         mtl,
         resourcet,
         temporary,
         transformers,
-        unliftio,
-        hspec >=2.7 && <3
+        unliftio

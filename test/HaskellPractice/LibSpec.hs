@@ -6,6 +6,6 @@ import           HaskellPractice.Lib (greet)
 
 spec :: Spec
 spec =
-  describe "greet" $
-    it "greets the provided name" $
-      greet "Haskell" `shouldBe` "Hello, Haskell!"
+    describe "greet" $
+        it "greets the provided name" $
+            greet "Haskell" `shouldBe` "Hello, Haskell!"
