@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedRecordDot #-}
+
 module HaskellPractice.Problems.Intermediate (
     -- * IO section
     readUntilBlank,
@@ -30,12 +32,21 @@ module HaskellPractice.Problems.Intermediate (
 ) where
 
 import           Control.Applicative              (Alternative (..))
-import           Control.Monad.Except             (MonadError (catchError, throwError),
+import           Control.Concurrent               (forkIO, newEmptyMVar,
+                                                   putMVar, signalQSem,
+                                                   takeMVar)
+import           Control.Concurrent.Async         (async, waitEither)
+import           Control.Concurrent.QSem          (newQSem, waitQSem)
+import           Control.Concurrent.STM.TVar      (newTVarIO)
+import           Control.Monad.Except             (ExceptT (ExceptT),
+                                                   MonadError (catchError, throwError),
                                                    runExceptT)
-import           Control.Monad.Trans              (MonadIO (liftIO))
-import           Control.Monad.Trans.Except       (ExceptT)
-import           Control.Monad.Trans.Reader       (ReaderT (runReaderT))
-import           Control.Monad.Trans.State.Strict (StateT (runStateT))
+import           Control.Monad.Trans              (MonadIO (liftIO),
+                                                   MonadTrans (lift))
+import           Control.Monad.Trans.Except       (ExceptT, throwE)
+import           Control.Monad.Trans.Reader       (ReaderT (ReaderT, runReaderT),
+                                                   ask)
+import           Control.Monad.Trans.State.Strict (StateT (runStateT), get, put)
 import           Data.Foldable                    (traverse_)
 import           Data.Functor                     (($>), (<$>))
 import           Data.List                        (isPrefixOf)
@@ -215,16 +226,40 @@ runAppM env state m = runExceptT $ runStateT (runReaderT m env) state
 
 -- 問題13: カウンタを任意の値だけ増加させる関数 incrementCounter を AppM 内に実装せよ。
 incrementCounter :: Int -> AppM ()
-incrementCounter = error "TODO"
+incrementCounter i = do
+    state <- stateCounter <$> lift get
+    _ <- lift $ put $ AppState $ i + state
+    pure ()
 
 -- 問題14: Reader 情報から値を取り出し、取得に失敗したら AppError を投げる requireSetting を実装せよ。
 requireSetting :: (Config -> Maybe b) -> AppM b
-requireSetting = error "TODO"
+requireSetting f = do
+    config <- ask
+    case f config.envConfig of
+        Just res -> lift $ pure res
+        Nothing  -> lift $ lift $ throwE $ AppError "Not Found"
 
 -- 問題15: 同時実行数の上限を守りながら IO アクションをマップする関数 mapConcurrentlyLimited を実装せよ。
 mapConcurrentlyLimited :: Int -> (a -> IO b) -> [a] -> IO [b]
-mapConcurrentlyLimited = error "TODO"
+mapConcurrentlyLimited maxConcurrent action inputs = do
+    sem <- newQSem maxConcurrent
+    results <-
+        mapM
+            ( \input -> do
+                res <- newEmptyMVar
+                _ <- forkIO $ do
+                    waitQSem sem
+                    result <- action input
+                    putMVar res result
+                    signalQSem sem
+                return res
+            )
+            inputs
+    mapM takeMVar results
 
 -- 問題16: 2 つの IO アクションを競争させ、先に終わったほうの結果を返す関数 raceBoth を実装せよ。
 raceBoth :: IO a -> IO b -> IO (Either a b)
-raceBoth = error "TODO"
+raceBoth a b = do
+    asyncA <- async a
+    asyncB <- async b
+    waitEither asyncA asyncB
